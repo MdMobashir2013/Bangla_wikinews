@@ -1,0 +1,666 @@
+// <nowiki>
+
+if (typeof reviewScript === 'undefined') {
+    var reviewScript = {};
+}
+reviewScript.api = new mw.Api();
+
+const localization = {
+    dialogTitle: 'উইকিসংবাদ নিবন্ধ নিরীক্ষা',
+    closeButtonLabel: 'বন্ধ করুন',
+    articleInfoTitle: 'নিবন্ধ সংক্রান্ত তথ্য',
+    creatorLabel: 'লেখক:',
+    creationDateLabel: 'তৈরির তারিখ:',
+    totalEditsLabel: 'মোট সম্পাদনা:',
+    lastEditorLabel: 'সর্বশেষ সম্পাদক:',
+    talkLinkText: 'আলাপ',
+    plagiarismCheckLabel: 'অনুলিপি পরীক্ষা:',
+    plagiarismCheckLinkText: 'কপিরাইট লঙ্ঘনের জন্য পরীক্ষা করুন',
+    revisionNumberLabel: 'সংস্করণ সংখ্যা:',
+    dateLabel: 'তারিখ:',
+    reviewerLabel: 'নিরীক্ষক:',
+    criteriaLabels: {
+        copyright: 'কপিরাইট:',
+        neutrality: 'নিরপেক্ষতা:',
+        style: 'শৈলী:',
+        content: 'বিষয়বস্তু:'
+    },
+    readabilityScoreLabel: 'পঠনযোগ্যতা স্কোর:',
+    totalWordsLabel: 'মোট শব্দ:',
+    totalSentencesLabel: 'মোট বাক্য:',
+    averageWordLengthLabel: 'গড় শব্দের দৈর্ঘ্য:',
+    averageSentenceLengthLabel: 'গড় বাক্যের দৈর্ঘ্য:',
+    passLabel: 'সফল',
+    failLabel: 'ব্যর্থ',
+    showSuggestedCommentsButton: 'পরামর্শকৃত মন্তব্য দেখুন',
+    suggestedCommentsTitle: 'পরামর্শকৃত মন্তব্য',
+    copyText: '(কপি)',
+    commentsLabel: 'মন্তব্য:',
+    tagAuthorLabel: 'লেখককে ট্যাগ করুন',
+    submitReviewButton: 'জমা করুন',
+    cancelButton: 'বাতিল',
+    helpButton: 'সাহায্য',
+    confirmDialogTitle: 'নিরীক্ষা জমা দেওয়ার নিশ্চিতকরণ',
+    confirmDialogMessage: 'আপনি কি নিশ্চিত যে আপনি এই নিরীক্ষার ফলাফল জমা দিতে চান?',
+    confirmSubmitButton: 'হ্যাঁ, জমা দিন',
+    reviewResultLabel: 'আপনার নিরীক্ষণের ফলাফল:',
+    successDialogTitle: 'নিরীক্ষা জমা দেওয়া হয়েছে',
+    successDialogMessage: 'নিবন্ধ নিরীক্ষা সফলভাবে জমা দেওয়া হয়েছে।',
+    okButton: 'ঠিক আছে',
+    warningMessage: 'অনুগ্রহ করে ব্যর্থ হিসেবে চিহ্নিত করার কারণ প্রদান করুন।',
+    reviewPortletLink: 'নিরীক্ষা করুন',
+    reviewPortletTitle: 'এই নিবন্ধটির নিরীক্ষা শুরু করুন',
+    commentSuggestions: [
+        'নিবন্ধটি সমস্ত নিরপেক্ষতা এবং শৈলীর নির্দেশিকা মেনে চলে, এবং উৎসগুলি সঠিকভাবে উদ্ধৃত করা হয়েছে। সুন্দর কাজ!',
+        'নিবন্ধের দ্বিতীয় অর্ধে উদ্ধৃতির অভাব রয়েছে। দাবিগুলি শক্তিশালী করতে আরও নির্ভরযোগ্য উৎস যোগ করা গুরুত্বপূর্ণ।',
+        'ভূমিকাটি স্পষ্ট, কিন্তু উপসংহারটি খুব হঠাৎ মনে হচ্ছে। নিবন্ধের প্রধান যুক্তিগুলি প্রতিফলিত করে একটি সারসংক্ষেপ যোগ করার কথা বিবেচনা করুন।',
+        'অনুগ্রহ করে আরও ভালো স্পষ্টতার জন্য নিবন্ধটি সংশোধন করুন, বিশেষ করে জটিল তত্ত্বগুলি আলোচনা করা অংশগুলিতে। বিষয়ের পূর্ব জ্ঞান ছাড়া কিছু ব্যাখ্যা অনুসরণ করা কঠিন।'
+    ],
+    templates: {
+        development: 'উন্নয়ন চলছে',
+        controversial: 'বিতর্কিত',
+        styleIssue: 'রচনাগত সমস্যা',
+        publish: 'প্রকাশ করুন'
+    },
+    editSummaries: {
+        published: 'নিরীক্ষণের পর নিবন্ধ প্রকাশিত হয়েছে',
+        developmentNeeded: 'নিবন্ধকে পুনরায় উন্নয়নের জন্য চিহ্নিত করা হয়েছে'
+    },
+    reviewSection: {
+        title: '== [সংস্করণ সংখ্যা: {revisionNumber}] এর নিরীক্ষণ - ফলাফল: {result} ==',
+        template: `{{প্রকাশন নিরীক্ষা
+|সংখ্যা={revisionNumber}
+|তারিখ={date}
+|নিরীক্ষক={reviewer}
+|ফলাফল={result}
+|বার্তা={comments}
+}}`,
+        successResult: 'সফল',
+        failResult: 'বিফল'
+    },
+    reviewSummary: 'নিরীক্ষণের সংস্করণ {revisionNumber}',
+    reviewTemplates: ['নিরীক্ষা', 'অনিরীক্ষিত প্রকাশ']
+};
+
+mw.loader.using(['@wikimedia/codex', 'mediawiki.api', 'mediawiki.util']).then(function(require) {
+    const { createMwApp } = require('vue');
+    const { CdxButton, CdxDialog, CdxTextInput, CdxProgressBar, CdxLabel, CdxSelect, CdxMessage, CdxRadio, CdxTextArea, CdxAccordion, CdxCheckbox } = require('@wikimedia/codex');
+
+    const mountPoint = document.body.appendChild(document.createElement('div'));
+    
+    function convertToBengaliDigits(number) {
+        const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        return number.toString().replace(/\d/g, digit => bengaliDigits[digit]);
+    }
+
+    function convertToBengaliDate(date, format = 'full') {
+    const bengaliDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const bengaliMonths = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+
+    const convertToBengaliDigits = (num) => num.toString().split('').map(digit => bengaliDigits[parseInt(digit)]).join('');
+
+    const day = convertToBengaliDigits(date.getDate());
+    const month = bengaliMonths[date.getMonth()];
+    const year = convertToBengaliDigits(date.getFullYear());
+
+    if (format === 'short') {
+        return `${day} ${month}, ${year}`;
+    } else {
+        const hours = convertToBengaliDigits(date.getUTCHours().toString().padStart(2, '0'));
+        const minutes = convertToBengaliDigits(date.getUTCMinutes().toString().padStart(2, '0'));
+        return `${day} ${month} ${year}, ${hours}:${minutes} (আন্তর্জাতিক সময়)`;
+    }
+}
+    
+    function isBengaliChar(char) {
+    return /[\u0980-\u09FF]/.test(char);
+}
+
+function calculateBengaliReadabilityScore(text) {
+    if (!text || typeof text !== 'string') {
+        console.error('Invalid input for readability calculation');
+        return { score: 'N/A', totalWords: 0, totalSentences: 0, averageWordLength: 'N/A', averageSentenceLength: 'N/A' };
+    }
+    text = text.replace(/\s+/g, ' ').trim();
+    const isBengaliChar = char => /[\u0980-\u09FF]/.test(char);
+    const conjunctRegex = /[\u0995-\u09B9]্[\u0995-\u09B9]/g;
+
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0 && word.split('').some(isBengaliChar));
+    const totalWords = words.length;
+    const totalSentences = (text.match(/[।!?]/g) || []).length;
+    const totalCharacters = text.split('').filter(isBengaliChar).length;
+    const totalConjuncts = text.match(conjunctRegex)?.length || 0;
+
+    if (totalSentences === 0 || totalWords === 0) {
+        console.error('Invalid text structure for readability calculation');
+        return { score: 'N/A', totalWords: 0, totalSentences: 0, averageWordLength: 'N/A', averageSentenceLength: 'N/A' };
+    }
+    const averageWordLength = totalCharacters / totalWords;
+    const averageSentenceLength = totalWords / totalSentences;
+    const conjunctRatio = totalConjuncts / totalWords;
+
+    const ari = (4.71 * averageWordLength) + (0.5 * averageSentenceLength) - (21.43 - (5 * conjunctRatio));
+
+    return {
+        score: ari.toFixed(2),
+        totalWords: totalWords,
+        totalSentences: totalSentences,
+        averageWordLength: averageWordLength.toFixed(2),
+        averageSentenceLength: averageSentenceLength.toFixed(2)
+    };
+}
+
+function extractAndCleanArticleContent() {
+    const contentElement = document.querySelector('.mw-parser-output');
+    if (!contentElement) return null;
+
+    const children = Array.from(contentElement.children);
+
+    let textContent = children
+        .filter(el => {
+            return ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'BLOCKQUOTE'].includes(el.tagName);
+        })
+        .map(el => el.innerText)
+        .join('\n');
+
+    textContent = textContent
+        .replace(/\{\{[^}]+\}\}/g, '')
+        .replace(/\[\[Category:[^\]]+\]\]/g, '')
+        .replace(/\[\[File:[^\]]+\]\]/g, '')
+        .replace(/\[\[Image:[^\]]+\]\]/g, '')
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/\[\[([^|]+?\|)?(.+?)\]\]/g, '$2')
+        .trim();
+
+    return textContent;
+}
+
+    const app = createMwApp({
+        data() {
+            return {
+            	localization: localization,
+                revision: convertToBengaliDigits(mw.config.get('wgRevisionId')),
+                revisionEng: mw.config.get('wgRevisionId'),
+                date: convertToBengaliDate(new Date()),
+                reviewer: mw.config.get('wgUserName'),
+                copyright: 'pass',
+                neutrality: 'pass',
+                style: 'pass',
+                content: 'pass',
+                comments: '',
+                showDialog: false,
+                showMessage: false,
+                messageType: '',
+                messageContent: '',
+                showProgress: false,
+                showConfirmDialog: false,
+                showSuccessDialog: false,
+                showSubmitProgress: false,
+                articleCreator: '',
+                articleCreatorTalk: '',
+                articleCreationDate: '',
+                totalEdits: 0,
+                lastEditor: '',
+                lastEditorTalk: '',
+                readabilityScore: '',
+                totalWords: '',
+                totalSentences: '',
+                averageWordLength: '',
+                averageSentenceLength: '',
+                showCommentsModal: false,
+                commentSuggestions: localization.commentSuggestions,
+                tagAuthor: false,
+                originalTag: '',
+                userModified: false
+            };
+        },
+        computed: {
+            isReviewValid() {
+                const hasFailedCriteria = ['copyright', 'neutrality', 'style', 'content'].some(
+                    criteria => this[criteria] === 'fail'
+                );
+                return !hasFailedCriteria || (hasFailedCriteria && this.comments.trim() !== '');
+            },
+            defaultTag() {
+                return this.articleCreator ? `@[[User:${this.articleCreator}|${this.articleCreator}]] ` : '';
+            }
+        },
+        watch: {
+            tagAuthor(newValue) {
+                if (newValue) {
+                    this.addTag();
+                } else {
+                    this.removeTag();
+                }
+            },
+            articleCreator() {
+                this.originalTag = this.defaultTag;
+                if (this.tagAuthor) {
+                    this.addTag();
+                }
+            }
+        },
+        methods: {
+            openReviewDialog() {
+                this.showDialog = true;
+                this.fetchArticleInfo();
+            },
+            fetchArticleInfo() {
+                reviewScript.api.get({
+                    action: 'query',
+                    prop: 'revisions|info',
+                    rvprop: 'timestamp|user',
+                    rvlimit: 'max',
+                    rvdir: 'newer',
+                    titles: mw.config.get('wgPageName'),
+                    formatversion: '2'
+                }).then(data => {
+                    const page = data.query.pages[0];
+                    const revisions = page.revisions;
+                    
+                    this.articleCreator = revisions[0].user;
+                    this.articleCreatorTalk = `User talk:${revisions[0].user}`;
+                    this.articleCreationDate = convertToBengaliDate(new Date(revisions[0].timestamp), 'short');
+                    this.totalEdits = convertToBengaliDigits(revisions.length);
+                    this.lastEditor = revisions[revisions.length - 1].user;
+                    this.lastEditorTalk = `User talk:${revisions[revisions.length - 1].user}`;
+                    
+         let content = extractAndCleanArticleContent();
+
+        if (content) {
+            const readabilityInfo = calculateBengaliReadabilityScore(content);
+            this.readabilityScore = readabilityInfo.score;
+            this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
+            this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+            this.averageWordLength = convertToBengaliDigits(readabilityInfo.averageWordLength);
+            this.averageSentenceLength = convertToBengaliDigits(readabilityInfo.averageSentenceLength);
+        } else {
+            console.error('Unable to retrieve article content');
+            this.setDefaultReadabilityValues();
+        }
+    }).catch(error => {
+        console.error('Error fetching article info:', error);
+        const domContent = extractAndCleanArticleContent();
+        if (domContent) {
+            const readabilityInfo = calculateBengaliReadabilityScore(domContent);
+            this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
+            this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
+            this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+            this.averageWordLength = convertToBengaliDigits(readabilityInfo.averageWordLength);
+            this.averageSentenceLength = convertToBengaliDigits(readabilityInfo.averageSentenceLength);
+        } else {
+            this.setDefaultReadabilityValues();
+        }
+    });
+},
+setDefaultReadabilityValues() {
+    this.readabilityScore = 'N/A';
+    this.totalWords = 'N/A';
+    this.totalSentences = 'N/A';
+    this.averageWordLength = 'N/A';
+    this.averageSentenceLength = 'N/A';
+},
+            submitReview() {
+                if (!this.isReviewValid) {
+                    this.displayMessage('warning', localization.warningMessage);
+                    return;
+                }
+
+                this.showConfirmDialog = true;
+            },
+            confirmSubmitReview() {
+                this.showConfirmDialog = false;
+                this.showSubmitProgress = true;
+
+                this.updateArticle()
+                    .then(() => this.updateTalkPage())
+                    .then(() => {
+                        this.showSubmitProgress = false;
+                        this.showDialog = false;
+                        this.showSuccessDialog = true;
+                        this.displayMessage('success', localization.successDialogMessage);
+                    })
+                    .catch(error => {
+                        console.error('Error during review process:', error);
+                        this.showSubmitProgress = false;
+                        this.displayMessage('error', 'An error occurred during the review process.');
+                    });
+            },
+            updateArticle() {
+                return reviewScript.api.get({
+                    action: 'query',
+                    prop: 'revisions',
+                    rvprop: 'content',
+                    rvslots: '*',
+                    titles: mw.config.get('wgPageName'),
+                    formatversion: '2'
+                }).then(data => {
+                    const page = data.query.pages[0];
+        let content = page.revisions[0].slots.main.content;
+
+        const reviewTemplates = this.localization.reviewTemplates || ['নিরীক্ষা', 'অনিরীক্ষিত প্রকাশ'];
+        const reviewRegExp = new RegExp(`\\{\\{(${reviewTemplates.join('|')})\\}\\}`, 'gi');
+        content = content.replace(reviewRegExp, '');
+
+        if (this.isReviewSuccessful()) {
+            content = content.replace(new RegExp(`\\{\\{${localization.templates.development}\\}\\}\n?`, 'gi'), '');
+            content = content.replace(new RegExp(`\\{\\{${localization.templates.controversial}\\}\\}\n?`, 'gi'), '');
+            content = content.replace(new RegExp(`\\{\\{${localization.templates.styleIssue}\\}\\}\n?`, 'gi'), '');
+            
+            if (!content.includes(`{{${localization.templates.publish}}}`)) {
+                content += `\n{{${localization.templates.publish}}}`;
+            }
+        } else {
+            if (!content.includes(`{{${localization.templates.development}}}`)) {
+                content = `{{${localization.templates.development}}}\n${content}`;
+            }
+            content = content.replace(new RegExp(`\\{\\{${localization.templates.publish}\\}\\}`, 'gi'), '');
+        }
+
+                    return reviewScript.api.postWithToken('csrf', {
+                        action: 'edit',
+                        title: mw.config.get('wgPageName'),
+                        text: content,
+                        summary: this.isReviewSuccessful() ? localization.editSummaries.published : localization.editSummaries.developmentNeeded,
+                        bot: false,
+                        nocreate: true
+                    });
+                });
+            },
+            updateTalkPage() {
+                const talkPageTitle = `Talk:${mw.config.get('wgTitle')}`;
+                const reviewResult = this.isReviewSuccessful() ? localization.reviewSection.successResult : localization.reviewSection.failResult;
+                const bengaliDate = convertToBengaliDate(new Date());
+                const reviewTemplate = localization.reviewSection.title.replace('{revisionNumber}', convertToBengaliDigits(this.revision))
+                    .replace('{result}', reviewResult) +
+                    '\n' + localization.reviewSection.template
+                        .replace('{revisionNumber}', convertToBengaliDigits(this.revision))
+                        .replace('{date}', bengaliDate)
+                        .replace('{reviewer}', this.reviewer)
+                        .replace('{result}', reviewResult)
+                        .replace('{comments}', this.comments);
+
+                return reviewScript.api.get({
+                    action: 'query',
+                    prop: 'revisions',
+                    rvprop: 'content',
+                    rvslots: '*',
+                    titles: talkPageTitle,
+                    formatversion: '2'
+                }).then(data => {
+                    const page = data.query.pages[0];
+                    let content = page.revisions ? page.revisions[0].slots.main.content : '';
+
+                    content = content.trim() + (content ? '\n\n' : '') + reviewTemplate;
+
+                    return reviewScript.api.postWithToken('csrf', {
+                        action: 'edit',
+                        title: talkPageTitle,
+                        text: content,
+                        summary: localization.reviewSummary.replace('{revisionNumber}', this.revision),
+                        bot: false,
+                        createonly: false
+                    });
+                });
+            },
+            isReviewSuccessful() {
+                return ['copyright', 'neutrality', 'style', 'content'].every(
+                    criteria => this[criteria] === 'pass'
+                );
+            },
+            displayMessage(type, content) {
+                this.messageType = type;
+                this.messageContent = content;
+                this.showMessage = true;
+                setTimeout(() => {
+                    this.showMessage = false;
+                }, 3000);
+            },
+            handleSuccessDialogClose() {
+                this.showSuccessDialog = false;
+                window.location.reload();
+            },
+            handleConfirmDialogCancel() {
+                this.showConfirmDialog = false;
+            },
+            cancelReview() {
+                this.showDialog = false;
+            },
+            openCommentsModal() {
+                this.showCommentsModal = true;
+            },
+            closeCommentsModal() {
+                this.showCommentsModal = false;
+            },
+            copyComment(comment) {
+                this.comments += comment + '\n';  
+                this.closeCommentsModal();
+            },
+            addTag() {
+                if (!this.comments.startsWith(this.originalTag)) {
+                    this.comments = this.originalTag + this.comments;
+                }
+            },
+            removeTag() {
+                if (this.comments.startsWith(this.originalTag) && !this.userModified) {
+                    this.comments = this.comments.replace(this.originalTag, '');
+                }
+            },
+            handleCommentInput(event) {
+                const newValue = event.target.value;
+                this.comments = newValue;
+
+                if (this.tagAuthor && !newValue.startsWith(this.originalTag)) {
+                    this.userModified = true;
+                    this.tagAuthor = false;
+                } else if (newValue.startsWith(this.originalTag)) {
+                    this.userModified = false; 
+                }
+            },
+            openHelpPage() {
+                window.open('https://incubator.wikimedia.org/wiki/Help:Reviewing_an_Article', '_blank');
+            },
+            openPlagiarismCheckPage() {
+                window.open(`https://copyvios.toolforge.org/?lang=incubator%3A%3Aincubatorwiki&project=wikimedia&oldid=${this.revisionEng}&action=search&use_engine=1&use_links=1&turnitin=1`, '_blank');
+               }
+        },
+        created() {
+            this.originalTag = this.defaultTag;
+        },
+        template: `
+            <div>
+                <cdx-dialog v-if="showDialog" :open="showDialog" @close="cancelReview" @update:open="showDialog = $event" :title="localization.dialogTitle" :closeButtonLabel="localization.closeButtonLabel">
+                    <template #default>
+                        <div style="margin-bottom: 15px;">
+                            <cdx-accordion>
+                                <template #title>
+                                    {{ localization.articleInfoTitle }}
+                                </template>
+                                <div style="font-size: 14px;">
+                                    <p>{{ localization.creatorLabel }} <a :href="'https://incubator.wikimedia.org/wiki/User:' + articleCreator" target="_blank">{{ articleCreator }}</a> 
+                                    (<a :href="'https://incubator.wikimedia.org/wiki/' + articleCreatorTalk" target="_blank">{{ localization.talkLinkText }}</a>)</p>
+                                    <p>{{ localization.creationDateLabel }} {{ articleCreationDate }}</p>
+                                    <p>{{ localization.totalEditsLabel }} {{ totalEdits }}</p>
+                                    <p>{{ localization.lastEditorLabel }} <a :href="'https://incubator.wikimedia.org/wiki/User:' + lastEditor" target="_blank">{{ lastEditor }}</a>
+                                    (<a :href="'https://incubator.wikimedia.org/wiki/' + lastEditorTalk" target="_blank">{{ localization.talkLinkText }}</a>)</p>
+                                    <p>{{ localization.readabilityScoreLabel }} {{ readabilityScore }}</p>
+                                    
+                                   <p>{{ localization.totalWordsLabel }} {{ totalWords }}</p>
+        <p>{{ localization.totalSentencesLabel }} {{ totalSentences }}</p> 
+        <p>{{ localization.averageWordLengthLabel }} {{ averageWordLength }}</p>
+        <p>{{ localization.averageSentenceLengthLabel }} {{ averageSentenceLength }}</p>
+
+                                </div>
+                            </cdx-accordion>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <cdx-label>{{ localization.plagiarismCheckLabel }}</cdx-label>
+                               <div style="margin-bottom:10px;">
+                                <cdx-button action="normal" @click="openPlagiarismCheckPage">
+                                    {{ localization.plagiarismCheckLinkText }}
+                                </cdx-button>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <cdx-label input-id="revision">{{ localization.revisionNumberLabel }}</cdx-label>
+                            <cdx-text-input id="revision" v-model="revision" readonly />
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <cdx-label input-id="date">{{ localization.dateLabel }}</cdx-label>
+                            <cdx-text-input id="date" v-model="date" readonly />
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <cdx-label input-id="reviewer">{{ localization.reviewerLabel }}</cdx-label>
+                            <cdx-text-input id="reviewer" v-model="reviewer" readonly />
+                        </div>
+
+                        <div v-for="criteria in ['copyright', 'neutrality', 'style', 'content']" :key="criteria" style="margin-bottom: 15px; margin-top: 5px;">
+                          <cdx-field :is-fieldset="true" :hide-label="false" style="display: flex; align-items: center;">
+                             <cdx-label :input-id="criteria" style="min-width: 110px; margin-right: 10px;">{{ localization.criteriaLabels[criteria] }}</cdx-label>
+                                <div style="display: flex;">
+            <cdx-radio
+                v-model="this[criteria]"
+                :name="criteria + '-radios'"
+                input-value="pass"
+                :inline="true"
+                style="margin-right: 10px;"
+            >
+                {{ localization.passLabel }}
+            </cdx-radio>
+            <cdx-radio
+                v-model="this[criteria]"
+                :name="criteria + '-radios'"
+                input-value="fail"
+                :inline="true"
+            >
+                {{ localization.failLabel }}
+            </cdx-radio>
+        </div>
+    </cdx-field>
+</div>
+                        
+                        <div style="margin-bottom: 15px; margin-top: 20px; border-top: 1px solid #d2d5d9; padding-top: 15px;">
+                            <cdx-button @click="openCommentsModal">{{ localization.showSuggestedCommentsButton }}</cdx-button>
+
+                            <cdx-dialog v-if="showCommentsModal" :open="showCommentsModal" @close="closeCommentsModal" :title="localization.suggestedCommentsTitle">
+                                <template #default>
+                                    <ul>
+                                        <li v-for="(comment, index) in commentSuggestions" :key="index" style="margin-bottom: 10px;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                <span>{{ comment }}</span>
+                                                <span @click="copyComment(comment)" style="cursor: pointer; color: #3366CC; margin-left: 10px;">
+                                                    {{ localization.copyText }}
+                                                </span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </template>
+                                <template #footer>
+                                    <cdx-button action="progressive" @click="closeCommentsModal">
+                                        {{ localization.closeButtonLabel }}
+                                    </cdx-button>
+                                </template>
+                            </cdx-dialog>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <cdx-label input-id="comments">{{ localization.commentsLabel }}</cdx-label>
+                            <cdx-textarea id="comments" :value="comments" @input="handleCommentInput" rows="4" />
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <cdx-checkbox v-model="tagAuthor">
+                                {{ localization.tagAuthorLabel }}
+                            </cdx-checkbox>
+                        </div>
+                    </template>
+                    <template #footer>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <cdx-button action="progressive" weight="primary" @click="submitReview" style="margin-right: 10px;">
+                                    {{ localization.submitReviewButton }}
+                                </cdx-button>
+                                <cdx-button action="normal" @click="cancelReview">
+                                    {{ localization.cancelButton }}
+                                </cdx-button>
+                            </div>
+                            <div>
+                                <cdx-button action="normal" @click="openHelpPage">
+                                    {{ localization.helpButton }}
+                                </cdx-button>
+                            </div>
+                        </div>
+                        <cdx-progress-bar v-if="showSubmitProgress" inline style="margin-top: 10px;" />
+                    </template>
+                </cdx-dialog>
+
+                <cdx-dialog v-if="showConfirmDialog" :open="showConfirmDialog" @close="handleConfirmDialogCancel" @update:open="showConfirmDialog = $event" :title="localization.confirmDialogTitle">
+                    <template #default>
+                        <p>{{ localization.confirmDialogMessage }}</p>
+                        <p>{{ localization.reviewResultLabel }} <strong>{{ isReviewSuccessful() ? localization.reviewSection.successResult : localization.reviewSection.failResult }}</strong></p>
+                    </template>
+                    <template #footer>
+                        <cdx-button action="progressive" weight="primary" @click="confirmSubmitReview" style="margin-right: 10px;">
+                            {{ localization.confirmSubmitButton }}
+                        </cdx-button>
+                        <cdx-button action="normal" @click="handleConfirmDialogCancel">
+                            {{ localization.cancelButton }}
+                        </cdx-button>
+                    </template>
+                </cdx-dialog>
+
+                <cdx-dialog v-if="showSuccessDialog" :open="showSuccessDialog" @close="handleSuccessDialogClose" @update:open="showSuccessDialog = $event" :title="localization.successDialogTitle">
+                    <template #default>
+                        <p>{{ localization.successDialogMessage }}</p>
+                    </template>
+                    <template #footer>
+                        <cdx-button action="progressive" weight="primary" @click="handleSuccessDialogClose">
+                            {{ localization.okButton }}
+                        </cdx-button>
+                    </template>
+                </cdx-dialog>
+
+                <cdx-progress-bar v-if="showProgress" inline />
+
+                <div v-if="showMessage" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 60%; z-index: 999;">
+                    <cdx-message
+                        :type="messageType"
+                        :fade-in="true"
+                        :auto-dismiss="true"
+                        :display-time="3000"
+                        dismiss-button-label="Close"
+                    >
+                        {{ messageContent }}
+                    </cdx-message>
+                </div>
+            </div>
+        `
+    })
+    .component('cdx-button', CdxButton)
+    .component('cdx-dialog', CdxDialog)
+    .component('cdx-text-input', CdxTextInput)
+    .component('cdx-textarea', CdxTextArea)
+    .component('cdx-radio', CdxRadio)
+    .component('cdx-progress-bar', CdxProgressBar)
+    .component('cdx-label', CdxLabel)
+    .component('cdx-message', CdxMessage)
+    .component('cdx-accordion', CdxAccordion)
+    .component('cdx-checkbox', CdxCheckbox)
+    .mount(mountPoint);
+
+    if (mw.config.get('wgNamespaceNumber') === 0 && document.getElementById('review')) {
+    var skin = mw.config.get('skin');
+    var portlet = skin === 'vector-2022' ? "p-cactions" : "p-tb";
+    
+    const dialogTrigger = mw.util.addPortletLink(portlet, '#', localization.reviewPortletLink, 'ca-review', localization.reviewPortletTitle);
+    
+    dialogTrigger.addEventListener('click', () => {
+        app.openReviewDialog();
+    });
+}
+});
+// </nowiki>
