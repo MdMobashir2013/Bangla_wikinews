@@ -1,9 +1,9 @@
 // <nowiki>
 
-if (typeof reviewScript === 'undefined') {
-    var reviewScript = {};
+if (typeof wikiNirikshak === 'undefined') {
+    var wikiNirikshak = {};
 }
-reviewScript.api = new mw.Api();
+wikiNirikshak.api = new mw.Api();
 
 const localization = {
     dialogTitle: 'উইকিসংবাদ নিবন্ধ নিরীক্ষা',
@@ -25,13 +25,11 @@ const localization = {
         style: 'শৈলী:',
         content: 'বিষয়বস্তু:'
     },
-    readabilityScoreLabel: 'পঠনযোগ্যতা স্কোর:',
+    readabilityScoreLabel: 'পঠনযোগ্যতা মান:',
     totalWordsLabel: 'মোট শব্দ:',
     totalSentencesLabel: 'মোট বাক্য:',
-    averageWordLengthLabel: 'গড় শব্দের দৈর্ঘ্য:',
-    averageSentenceLengthLabel: 'গড় বাক্যের দৈর্ঘ্য:',
     passLabel: 'সফল',
-    failLabel: 'ব্যর্থ',
+    failLabel: 'প্রস্তুত নয়',
     showSuggestedCommentsButton: 'পরামর্শকৃত মন্তব্য দেখুন',
     suggestedCommentsTitle: 'পরামর্শকৃত মন্তব্য',
     copyText: '(কপি)',
@@ -50,17 +48,21 @@ const localization = {
     warningMessage: 'অনুগ্রহ করে ব্যর্থ হিসেবে চিহ্নিত করার কারণ প্রদান করুন।',
     reviewPortletLink: 'নিরীক্ষা করুন',
     reviewPortletTitle: 'এই নিবন্ধটির নিরীক্ষা শুরু করুন',
-    commentSuggestions: [
-        'নিবন্ধটি সমস্ত নিরপেক্ষতা এবং শৈলীর নির্দেশিকা মেনে চলে, এবং উৎসগুলি সঠিকভাবে উদ্ধৃত করা হয়েছে। সুন্দর কাজ!',
-        'নিবন্ধের দ্বিতীয় অর্ধে উদ্ধৃতির অভাব রয়েছে। দাবিগুলি শক্তিশালী করতে আরও নির্ভরযোগ্য উৎস যোগ করা গুরুত্বপূর্ণ।',
-        'ভূমিকাটি স্পষ্ট, কিন্তু উপসংহারটি খুব হঠাৎ মনে হচ্ছে। নিবন্ধের প্রধান যুক্তিগুলি প্রতিফলিত করে একটি সারসংক্ষেপ যোগ করার কথা বিবেচনা করুন।',
-        'অনুগ্রহ করে আরও ভালো স্পষ্টতার জন্য নিবন্ধটি সংশোধন করুন, বিশেষ করে জটিল তত্ত্বগুলি আলোচনা করা অংশগুলিতে। বিষয়ের পূর্ব জ্ঞান ছাড়া কিছু ব্যাখ্যা অনুসরণ করা কঠিন।'
-    ],
+    commentSuggestions: {
+    	positiveFeedback: [
+            'নিবন্ধটি সমস্ত নিরপেক্ষতা এবং শৈলীর নির্দেশিকা মেনে চলে, এবং উৎসগুলি সঠিকভাবে উদ্ধৃত করা হয়েছে। ভালো কাজ!',
+        ],
+        constructiveFeedback: [
+            'নিবন্ধের দ্বিতীয় পরিচ্ছেদের তথ্যগুলোর জন্য উদ্ধৃতির অভাব রয়েছে। দাবিগুলি শক্তিশালী করতে আরও নির্ভরযোগ্য উৎস যোগ করা গুরুত্বপূর্ণ।',
+            'নিবন্ধের প্রথম পরিচ্ছেদটি ঘটনা সম্পর্কে কে, কি, কেন, কিভাবে এবং কারা ইত্যাদি প্রশ্নের উত্তর বর্ণনা করা হয়নি। নিবন্ধের প্রধান যুক্তিগুলি প্রতিফলিত করে একটি সারসংক্ষেপ যোগ করার কথা বিবেচনা করুন।',
+            'অনুগ্রহ করে আরও ভালো স্পষ্টতার জন্য নিবন্ধটি সংশোধন করুন, বিশেষ করে জটিল তত্ত্বগুলি আলোচনা করা অংশগুলিতে। বিষয়ের পূর্ব জ্ঞান ছাড়া কিছু ব্যাখ্যা অনুসরণ করা কঠিন।',
+        ]
+    },
     templates: {
-        development: 'উন্নয়ন চলছে',
-        controversial: 'বিতর্কিত',
-        styleIssue: 'রচনাগত সমস্যা',
-        publish: 'প্রকাশ করুন'
+        development: 'Wn/bn/উন্নয়ন চলছে',
+        controversial: 'Wn/bn/বিতর্কিত',
+        styleIssue: 'Wn/bn/রচনাগত সমস্যা',
+        publish: 'Wn/bn/প্রকাশ করুন'
     },
     editSummaries: {
         published: 'নিরীক্ষণের পর নিবন্ধ প্রকাশিত হয়েছে',
@@ -68,7 +70,7 @@ const localization = {
     },
     reviewSection: {
         title: '== [সংস্করণ সংখ্যা: {revisionNumber}] এর নিরীক্ষণ - ফলাফল: {result} ==',
-        template: `{{প্রকাশন নিরীক্ষা
+        template: `{{Wn/bn/প্রকাশন নিরীক্ষা
 |সংখ্যা={revisionNumber}
 |তারিখ={date}
 |নিরীক্ষক={reviewer}
@@ -79,7 +81,7 @@ const localization = {
         failResult: 'বিফল'
     },
     reviewSummary: 'নিরীক্ষণের সংস্করণ {revisionNumber}',
-    reviewTemplates: ['নিরীক্ষা', 'অনিরীক্ষিত প্রকাশ']
+    reviewTemplates: ['Wn/bn/নিরীক্ষা', 'Wn/bn/অনিরীক্ষিত প্রকাশ']
 };
 
 mw.loader.using(['@wikimedia/codex', 'mediawiki.api', 'mediawiki.util']).then(function(require) {
@@ -145,8 +147,6 @@ function calculateBengaliReadabilityScore(text) {
         score: ari.toFixed(2),
         totalWords: totalWords,
         totalSentences: totalSentences,
-        averageWordLength: averageWordLength.toFixed(2),
-        averageSentenceLength: averageSentenceLength.toFixed(2)
     };
 }
 
@@ -205,10 +205,9 @@ function extractAndCleanArticleContent() {
                 readabilityScore: '',
                 totalWords: '',
                 totalSentences: '',
-                averageWordLength: '',
-                averageSentenceLength: '',
                 showCommentsModal: false,
-                commentSuggestions: localization.commentSuggestions,
+                positiveFeedback: localization.commentSuggestions.positiveFeedback,
+                constructiveFeedback: localization.commentSuggestions.constructiveFeedback,
                 tagAuthor: false,
                 originalTag: '',
                 userModified: false
@@ -223,6 +222,12 @@ function extractAndCleanArticleContent() {
             },
             defaultTag() {
                 return this.articleCreator ? `@[[User:${this.articleCreator}|${this.articleCreator}]] ` : '';
+            },
+            filteredCommentSuggestions() {
+        const allPassed = ['copyright', 'neutrality', 'style', 'content'].every(
+            criteria => this[criteria] === 'pass'
+        );
+        return allPassed ? this.positiveFeedback : this.constructiveFeedback;
             }
         },
         watch: {
@@ -246,7 +251,7 @@ function extractAndCleanArticleContent() {
                 this.fetchArticleInfo();
             },
             fetchArticleInfo() {
-                reviewScript.api.get({
+                wikiNirikshak.api.get({
                     action: 'query',
                     prop: 'revisions|info',
                     rvprop: 'timestamp|user',
@@ -265,47 +270,40 @@ function extractAndCleanArticleContent() {
                     this.lastEditor = revisions[revisions.length - 1].user;
                     this.lastEditorTalk = `User talk:${revisions[revisions.length - 1].user}`;
                     
-         let content = extractAndCleanArticleContent();
+                    let content = extractAndCleanArticleContent();
 
-        if (content) {
-            const readabilityInfo = calculateBengaliReadabilityScore(content);
-            this.readabilityScore = readabilityInfo.score;
-            this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
-            this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
-            this.averageWordLength = convertToBengaliDigits(readabilityInfo.averageWordLength);
-            this.averageSentenceLength = convertToBengaliDigits(readabilityInfo.averageSentenceLength);
-        } else {
-            console.error('Unable to retrieve article content');
-            this.setDefaultReadabilityValues();
-        }
-    }).catch(error => {
-        console.error('Error fetching article info:', error);
-        const domContent = extractAndCleanArticleContent();
-        if (domContent) {
-            const readabilityInfo = calculateBengaliReadabilityScore(domContent);
-            this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
-            this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
-            this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
-            this.averageWordLength = convertToBengaliDigits(readabilityInfo.averageWordLength);
-            this.averageSentenceLength = convertToBengaliDigits(readabilityInfo.averageSentenceLength);
-        } else {
-            this.setDefaultReadabilityValues();
-        }
-    });
-},
-setDefaultReadabilityValues() {
-    this.readabilityScore = 'N/A';
-    this.totalWords = 'N/A';
-    this.totalSentences = 'N/A';
-    this.averageWordLength = 'N/A';
-    this.averageSentenceLength = 'N/A';
-},
+                    if (content) {
+                        const readabilityInfo = calculateBengaliReadabilityScore(content);
+                        this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
+                        this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
+                        this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+                    } else {
+                        console.error('Unable to retrieve article content');
+                        this.setDefaultReadabilityValues();
+                    }
+                            }).catch(error => {
+                                console.error('Error fetching article info:', error);
+                                const domContent = extractAndCleanArticleContent();
+                                if (domContent) {
+                                   const readabilityInfo = calculateBengaliReadabilityScore(domContent);
+                                   this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
+                                   this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
+                                   this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+                                } else {
+                                    this.setDefaultReadabilityValues();
+                                }
+                            });
+            },
+            setDefaultReadabilityValues() {
+                this.readabilityScore = 'N/A';
+                this.totalWords = 'N/A';
+                this.totalSentences = 'N/A';
+            },
             submitReview() {
                 if (!this.isReviewValid) {
                     this.displayMessage('warning', localization.warningMessage);
                     return;
                 }
-
                 this.showConfirmDialog = true;
             },
             confirmSubmitReview() {
@@ -327,7 +325,7 @@ setDefaultReadabilityValues() {
                     });
             },
             updateArticle() {
-                return reviewScript.api.get({
+                return wikiNirikshak.api.get({
                     action: 'query',
                     prop: 'revisions',
                     rvprop: 'content',
@@ -338,7 +336,7 @@ setDefaultReadabilityValues() {
                     const page = data.query.pages[0];
         let content = page.revisions[0].slots.main.content;
 
-        const reviewTemplates = this.localization.reviewTemplates || ['নিরীক্ষা', 'অনিরীক্ষিত প্রকাশ'];
+        const reviewTemplates = this.localization.reviewTemplates || ['Wn/bn/নিরীক্ষা', 'Wn/bn/অনিরীক্ষিত প্রকাশ'];
         const reviewRegExp = new RegExp(`\\{\\{(${reviewTemplates.join('|')})\\}\\}`, 'gi');
         content = content.replace(reviewRegExp, '');
 
@@ -357,7 +355,7 @@ setDefaultReadabilityValues() {
             content = content.replace(new RegExp(`\\{\\{${localization.templates.publish}\\}\\}`, 'gi'), '');
         }
 
-                    return reviewScript.api.postWithToken('csrf', {
+                    return wikiNirikshak.api.postWithToken('csrf', {
                         action: 'edit',
                         title: mw.config.get('wgPageName'),
                         text: content,
@@ -380,7 +378,7 @@ setDefaultReadabilityValues() {
                         .replace('{result}', reviewResult)
                         .replace('{comments}', this.comments);
 
-                return reviewScript.api.get({
+                return wikiNirikshak.api.get({
                     action: 'query',
                     prop: 'revisions',
                     rvprop: 'content',
@@ -393,7 +391,7 @@ setDefaultReadabilityValues() {
 
                     content = content.trim() + (content ? '\n\n' : '') + reviewTemplate;
 
-                    return reviewScript.api.postWithToken('csrf', {
+                    return wikiNirikshak.api.postWithToken('csrf', {
                         action: 'edit',
                         title: talkPageTitle,
                         text: content,
@@ -484,12 +482,8 @@ setDefaultReadabilityValues() {
                                     <p>{{ localization.lastEditorLabel }} <a :href="'https://incubator.wikimedia.org/wiki/User:' + lastEditor" target="_blank">{{ lastEditor }}</a>
                                     (<a :href="'https://incubator.wikimedia.org/wiki/' + lastEditorTalk" target="_blank">{{ localization.talkLinkText }}</a>)</p>
                                     <p>{{ localization.readabilityScoreLabel }} {{ readabilityScore }}</p>
-                                    
                                    <p>{{ localization.totalWordsLabel }} {{ totalWords }}</p>
-        <p>{{ localization.totalSentencesLabel }} {{ totalSentences }}</p> 
-        <p>{{ localization.averageWordLengthLabel }} {{ averageWordLength }}</p>
-        <p>{{ localization.averageSentenceLengthLabel }} {{ averageSentenceLength }}</p>
-
+                                   <p>{{ localization.totalSentencesLabel }} {{ totalSentences }}</p> 
                                 </div>
                             </cdx-accordion>
                         </div>
@@ -519,29 +513,18 @@ setDefaultReadabilityValues() {
                         </div>
 
                         <div v-for="criteria in ['copyright', 'neutrality', 'style', 'content']" :key="criteria" style="margin-bottom: 15px; margin-top: 5px;">
-                          <cdx-field :is-fieldset="true" :hide-label="false" style="display: flex; align-items: center;">
-                             <cdx-label :input-id="criteria" style="min-width: 110px; margin-right: 10px;">{{ localization.criteriaLabels[criteria] }}</cdx-label>
-                                <div style="display: flex;">
-            <cdx-radio
-                v-model="this[criteria]"
-                :name="criteria + '-radios'"
-                input-value="pass"
-                :inline="true"
-                style="margin-right: 10px;"
-            >
-                {{ localization.passLabel }}
-            </cdx-radio>
-            <cdx-radio
-                v-model="this[criteria]"
-                :name="criteria + '-radios'"
-                input-value="fail"
-                :inline="true"
-            >
-                {{ localization.failLabel }}
-            </cdx-radio>
-        </div>
-    </cdx-field>
-</div>
+                            <cdx-field :is-fieldset="true" :hide-label="false" style="display: flex; align-items: center;">
+                                <cdx-label :input-id="criteria" style="min-width: 110px; margin-right: 10px;">{{ localization.criteriaLabels[criteria] }}</cdx-label>
+                                    <div style="display: flex;">
+                                    <cdx-radio v-model="this[criteria]" :name="criteria + '-radios'" input-value="pass" :inline="true" style="margin-right: 10px;">
+                                    {{ localization.passLabel }}
+                                    </cdx-radio>
+                                    <cdx-radio v-model="this[criteria]" :name="criteria + '-radios'" input-value="fail" :inline="true">
+                                    {{ localization.failLabel }}
+                                    </cdx-radio>
+                                    </div>
+                            </cdx-field>
+                        </div>
                         
                         <div style="margin-bottom: 15px; margin-top: 20px; border-top: 1px solid #d2d5d9; padding-top: 15px;">
                             <cdx-button @click="openCommentsModal">{{ localization.showSuggestedCommentsButton }}</cdx-button>
@@ -549,7 +532,7 @@ setDefaultReadabilityValues() {
                             <cdx-dialog v-if="showCommentsModal" :open="showCommentsModal" @close="closeCommentsModal" :title="localization.suggestedCommentsTitle">
                                 <template #default>
                                     <ul>
-                                        <li v-for="(comment, index) in commentSuggestions" :key="index" style="margin-bottom: 10px;">
+                                        <li v-for="(comment, index) in filteredCommentSuggestions" :key="index" style="margin-bottom: 10px;">
                                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                                 <span>{{ comment }}</span>
                                                 <span @click="copyComment(comment)" style="cursor: pointer; color: #3366CC; margin-left: 10px;">
@@ -627,13 +610,7 @@ setDefaultReadabilityValues() {
                 <cdx-progress-bar v-if="showProgress" inline />
 
                 <div v-if="showMessage" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 60%; z-index: 999;">
-                    <cdx-message
-                        :type="messageType"
-                        :fade-in="true"
-                        :auto-dismiss="true"
-                        :display-time="3000"
-                        dismiss-button-label="Close"
-                    >
+                    <cdx-message :type="messageType" :fade-in="true" :auto-dismiss="true" :display-time="3000" dismiss-button-label="Close">
                         {{ messageContent }}
                     </cdx-message>
                 </div>
