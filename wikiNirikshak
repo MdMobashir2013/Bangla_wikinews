@@ -1,4 +1,12 @@
 // <nowiki>
+// Name: Wiki Nirikshak
+// Inspiration: Multiple sources, mainly:
+//                          User:Syunsyunminmin/wikinews/easy-dialog.js,
+//                          User:EGardner (WMF)/codex-hello-world.js, 
+//                          User:Phlsph7/Readability.js
+
+// A user script for reviewing articles on Bangla Wikinews.
+// Adds an option to the p-cactions for Vector 2022 skin and only to the p-tab for other skins.
 
 if (typeof wikiNirikshak === 'undefined') {
     var wikiNirikshak = {};
@@ -15,7 +23,7 @@ const localization = {
     lastEditorLabel: 'সর্বশেষ সম্পাদক:',
     talkLinkText: 'আলাপ',
     plagiarismCheckLabel: 'অনুলিপি পরীক্ষা:',
-    plagiarismCheckLinkText: 'কপিরাইট লঙ্ঘনের জন্য পরীক্ষা করুন',
+    plagiarismCheckLinkText: 'কপিরাইট লঙ্ঘন পরীক্ষা করুন',
     revisionNumberLabel: 'সংস্করণ সংখ্যা:',
     dateLabel: 'তারিখ:',
     reviewerLabel: 'নিরীক্ষক:',
@@ -28,6 +36,12 @@ const localization = {
     readabilityScoreLabel: 'পঠনযোগ্যতা মান:',
     totalWordsLabel: 'মোট শব্দ:',
     totalSentencesLabel: 'মোট বাক্য:',
+    readabilityCategories: {
+        veryEasy: "খুবই সহজ",
+        easy: "সহজ",
+        normal: "স্বাভাবিক",
+        difficult: "কঠিন"
+    },
     passLabel: 'সফল',
     failLabel: 'প্রস্তুত নয়',
     showSuggestedCommentsButton: 'পরামর্শকৃত মন্তব্য দেখুন',
@@ -43,20 +57,33 @@ const localization = {
     confirmSubmitButton: 'হ্যাঁ, জমা দিন',
     reviewResultLabel: 'আপনার নিরীক্ষণের ফলাফল:',
     successDialogTitle: 'নিরীক্ষা জমা দেওয়া হয়েছে',
-    successDialogMessage: 'নিবন্ধ নিরীক্ষা সফলভাবে জমা দেওয়া হয়েছে।',
+    successDialogMessage: 'নিবন্ধ নিরীক্ষণের ফলাফল সফলভাবে জমা দেওয়া হয়েছে।',
     okButton: 'ঠিক আছে',
-    warningMessage: 'অনুগ্রহ করে ব্যর্থ হিসেবে চিহ্নিত করার কারণ প্রদান করুন।',
+    warningMessage: 'অনুগ্রহ করে "প্রস্তুত নয়" হিসেবে চিহ্নিত করার কারণ প্রদান করুন।',
     reviewPortletLink: 'নিরীক্ষা করুন',
     reviewPortletTitle: 'এই নিবন্ধটির নিরীক্ষা শুরু করুন',
     commentSuggestions: {
-    	positiveFeedback: [
-            'নিবন্ধটি সমস্ত নিরপেক্ষতা এবং শৈলীর নির্দেশিকা মেনে চলে, এবং উৎসগুলি সঠিকভাবে উদ্ধৃত করা হয়েছে। ভালো কাজ!',
-        ],
-        constructiveFeedback: [
-            'নিবন্ধের দ্বিতীয় পরিচ্ছেদের তথ্যগুলোর জন্য উদ্ধৃতির অভাব রয়েছে। দাবিগুলি শক্তিশালী করতে আরও নির্ভরযোগ্য উৎস যোগ করা গুরুত্বপূর্ণ।',
-            'নিবন্ধের প্রথম পরিচ্ছেদটি ঘটনা সম্পর্কে কে, কি, কেন, কিভাবে এবং কারা ইত্যাদি প্রশ্নের উত্তর বর্ণনা করা হয়নি। নিবন্ধের প্রধান যুক্তিগুলি প্রতিফলিত করে একটি সারসংক্ষেপ যোগ করার কথা বিবেচনা করুন।',
-            'অনুগ্রহ করে আরও ভালো স্পষ্টতার জন্য নিবন্ধটি সংশোধন করুন, বিশেষ করে জটিল তত্ত্বগুলি আলোচনা করা অংশগুলিতে। বিষয়ের পূর্ব জ্ঞান ছাড়া কিছু ব্যাখ্যা অনুসরণ করা কঠিন।',
-        ]
+    positiveFeedback: [
+        'নিবন্ধটি সমস্ত নিরপেক্ষতা এবং শৈলীর নির্দেশিকা মেনে চলে, এবং উৎসগুলি সঠিকভাবে উদ্ধৃত করা হয়েছে। ভালো কাজ!',
+        'উৎসের যথাযথ ব্যবহারের জন্য আপনাকে ধন্যবাদ, যা নিবন্ধটির নির্ভরযোগ্যতাকে আরও বাড়িয়ে তুলেছে।',
+        'প্রাসঙ্গিক এবং ভালভাবে সমর্থিত তথ্যের মাধ্যমে নিবন্ধটি একটি শক্তিশালী এবং বোধগম্য উপস্থাপনা প্রদান করে।',
+        'নিবন্ধের তাত্ত্বিক বিশ্লেষণ অত্যন্ত সুনিপুণ। এটি বিষয়বস্তুর গভীরতা বাড়িয়েছে।',
+        'শৈলী এবং বিন্যাসের দিক থেকে নিবন্ধটি পড়তে খুবই সহজ এবং উপভোগ্য ছিল।',
+
+    ],
+    constructiveFeedback: [
+        'নিবন্ধের কিছু অংশ সরাসরি উৎস থেকে অনুলিপি করা হয়েছে বলে মনে হচ্ছে। দয়া করে এটি পুনর্লিখন করুন এবং আপনার নিজের ভাষায় তথ্য উপস্থাপন করুন।',
+        'নিবন্ধের দ্বিতীয় পরিচ্ছেদের তথ্যগুলোর জন্য উদ্ধৃতির অভাব রয়েছে। দাবিগুলি শক্তিশালী করতে আরও নির্ভরযোগ্য উৎস যোগ করা গুরুত্বপূর্ণ।',
+        'নিবন্ধের প্রথম পরিচ্ছেদে, ঘটনা সম্পর্কে কে, কি, কেন, কিভাবে এবং কারা ইত্যাদি প্রশ্নের উত্তর বর্ণনা করা হয়নি। নিবন্ধের প্রধান যুক্তিগুলি প্রতিফলিত করে একটি সারসংক্ষেপ যোগ করার কথা বিবেচনা করুন।',
+        'অনুগ্রহ করে আরও ভালো স্পষ্টতার জন্য নিবন্ধটি সংশোধন করুন, বিশেষ করে জটিল তত্ত্বগুলি আলোচনা করা হয়েছে সেই অংশগুলিতে। বিষয়ের পূর্ব জ্ঞান ছাড়া কিছু ব্যাখ্যা অনুসরণ করা কঠিন।',
+        'নিবন্ধে কিছু গুরুত্বপূর্ণ অংশ অসম্পূর্ণ মনে হয়েছে। বিষয়ের আরও গভীরতা এবং বিশ্লেষণ যুক্ত করলে এটি আরও সমৃদ্ধ হবে।',
+        'নিবন্ধে নিরপেক্ষতার অভাব রয়েছে, বিশেষত যেখানে মতামতগুলো উপস্থাপিত হয়েছে। নিরপেক্ষভাবে বিষয়টি বিবেচনা করা প্রয়োজন।',
+        'বিভিন্ন তথ্যের মধ্যে কিছু অসংগতির মতো মনে হচ্ছে। দয়া করে সংশ্লিষ্ট উৎসগুলির সাথে সেগুলি পুনরায় মিলিয়ে নিন।',
+        'প্রমাণ উপস্থাপনার ক্ষেত্রে ভারসাম্য বজায় রাখার প্রয়োজন। কিছু যুক্তিকে শক্তিশালী করার জন্য প্রতিপক্ষের মতামত এবং প্রতিক্রিয়া যুক্ত করা উচিত।',
+        'নিবন্ধে কিছু তথ্য পুরানো বলে মনে হচ্ছে। প্রাসঙ্গিকতা এবং সঠিকতার জন্য সর্বশেষ তথ্য এবং গবেষণা অন্তর্ভুক্ত করার কথা বিবেচনা করুন।',
+        'অংশ বিশেষে অপ্রয়োজনীয় তথ্য যোগ করা হয়েছে যা মূল বিষয় থেকে মনোযোগ সরিয়ে দেয়। প্রাসঙ্গিক তথ্যের উপর গুরুত্বারোপ করুন।',
+        'নিবন্ধের কিছু অংশ কপিরাইট নীতিমালার সাথে অসঙ্গতিপূর্ণ হতে পারে। অনুগ্রহ করে পুনর্বিবেচনা করে পাঠ্যগুলিকে পুনর্লিখন করুন।'
+    ]
     },
     templates: {
         development: 'Wn/bn/উন্নয়ন চলছে',
@@ -78,9 +105,9 @@ const localization = {
 |বার্তা={comments}
 }}`,
         successResult: 'সফল',
-        failResult: 'বিফল'
+        failResult: 'প্রস্তুত নয়'
     },
-    reviewSummary: 'নিরীক্ষণের সংস্করণ {revisionNumber}',
+    reviewSummary: 'সংস্করণ সংখ্যা {revisionNumber}-এর নিরীক্ষণ',
     reviewTemplates: ['Wn/bn/নিরীক্ষা', 'Wn/bn/অনিরীক্ষিত প্রকাশ']
 };
 
@@ -203,6 +230,7 @@ function extractAndCleanArticleContent() {
                 lastEditor: '',
                 lastEditorTalk: '',
                 readabilityScore: '',
+                readabilityCategory: '',
                 totalWords: '',
                 totalSentences: '',
                 showCommentsModal: false,
@@ -228,7 +256,10 @@ function extractAndCleanArticleContent() {
             criteria => this[criteria] === 'pass'
         );
         return allPassed ? this.positiveFeedback : this.constructiveFeedback;
-            }
+            },
+        displayReadabilityCategory() {
+            return this.categorizeReadabilityScore(this.readabilityScore);
+            },
         },
         watch: {
             tagAuthor(newValue) {
@@ -277,6 +308,8 @@ function extractAndCleanArticleContent() {
                         this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
                         this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
                         this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+                        this.readabilityCategory = this.categorizeReadabilityScore(readabilityInfo.score);
+
                     } else {
                         console.error('Unable to retrieve article content');
                         this.setDefaultReadabilityValues();
@@ -289,6 +322,7 @@ function extractAndCleanArticleContent() {
                                    this.readabilityScore = convertToBengaliDigits(readabilityInfo.score);
                                    this.totalWords = convertToBengaliDigits(readabilityInfo.totalWords);
                                    this.totalSentences = convertToBengaliDigits(readabilityInfo.totalSentences);
+                                   this.readabilityCategory = this.categorizeReadabilityScore(readabilityInfo.score);
                                 } else {
                                     this.setDefaultReadabilityValues();
                                 }
@@ -298,6 +332,15 @@ function extractAndCleanArticleContent() {
                 this.readabilityScore = 'N/A';
                 this.totalWords = 'N/A';
                 this.totalSentences = 'N/A';
+                this.readabilityCategory = 'N/A';
+            },
+            categorizeReadabilityScore(score) {
+                if (score === 'N/A') return 'N/A';
+                const numScore = parseFloat(score);
+                if (numScore < 3) return this.localization.readabilityCategories.veryEasy;
+                if (numScore < 6) return this.localization.readabilityCategories.easy;
+                if (numScore < 9) return this.localization.readabilityCategories.normal;
+                return this.localization.readabilityCategories.difficult;
             },
             submitReview() {
                 if (!this.isReviewValid) {
@@ -456,7 +499,7 @@ function extractAndCleanArticleContent() {
                 }
             },
             openHelpPage() {
-                window.open('https://incubator.wikimedia.org/wiki/Help:Reviewing_an_Article', '_blank');
+                window.open('https://incubator.wikimedia.org/wiki/Help:Wn/bn/Reviewing_an_Article', '_blank');
             },
             openPlagiarismCheckPage() {
                 window.open(`https://copyvios.toolforge.org/?lang=incubator%3A%3Aincubatorwiki&project=wikimedia&oldid=${this.revisionEng}&action=search&use_engine=1&use_links=1&turnitin=1`, '_blank');
@@ -481,9 +524,9 @@ function extractAndCleanArticleContent() {
                                     <p>{{ localization.totalEditsLabel }} {{ totalEdits }}</p>
                                     <p>{{ localization.lastEditorLabel }} <a :href="'https://incubator.wikimedia.org/wiki/User:' + lastEditor" target="_blank">{{ lastEditor }}</a>
                                     (<a :href="'https://incubator.wikimedia.org/wiki/' + lastEditorTalk" target="_blank">{{ localization.talkLinkText }}</a>)</p>
-                                    <p>{{ localization.readabilityScoreLabel }} {{ readabilityScore }}</p>
-                                   <p>{{ localization.totalWordsLabel }} {{ totalWords }}</p>
-                                   <p>{{ localization.totalSentencesLabel }} {{ totalSentences }}</p> 
+                                    <p>{{ localization.readabilityScoreLabel }} {{ displayReadabilityCategory }} ({{ readabilityScore }})</p>
+                                    <p>{{ localization.totalWordsLabel }} {{ totalWords }}</p>
+                                    <p>{{ localization.totalSentencesLabel }} {{ totalSentences }}</p> 
                                 </div>
                             </cdx-accordion>
                         </div>
